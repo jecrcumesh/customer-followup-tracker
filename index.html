@@ -19,23 +19,47 @@
   *{box-sizing:border-box;}
   body{
     margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    background:var(--bg); color:var(--text); padding:24px; max-width:1200px; margin:0 auto;
+    background:var(--bg); color:var(--text);
   }
+  .wrap{ max-width:1200px; margin:0 auto; padding:24px; }
   h1{font-size:20px; margin:0 0 4px;}
   .sub{color:var(--muted); font-size:13px; margin-bottom:16px;}
-  .syncbar{
+
+  /* ---------- login gate ---------- */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:32px;
+    width:400px; max-width:92vw; box-shadow:0 10px 40px rgba(0,0,0,0.08);
+  }
+  .login-card h1{ font-size:18px; margin-bottom:4px; }
+  .login-card .sub{ margin-bottom:22px; }
+  .login-card label{ display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px; }
+  .login-card input[type=password], .login-card input[type=text]{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:12px;
+  }
+  .login-card .remember{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); margin-bottom:18px; }
+  .login-card .remember input{ width:auto; }
+  .login-card button{ width:100%; }
+  .login-error{ background:var(--noresp); color:var(--noresp-text); font-size:12.5px; padding:8px 10px; border-radius:8px; margin-bottom:14px; display:none; }
+  .login-hint{ font-size:11.5px; color:var(--muted); margin-top:16px; line-height:1.5; }
+  .login-hint a{ color:var(--accent); }
+
+  #appScreen{ display:none; }
+
+  .topbar{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--card); border:1px solid var(--border);
     border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:12.5px; color:var(--muted);
   }
-  .syncbar .dot{ width:8px; height:8px; border-radius:50%; background:#9ca3af; display:inline-block; }
-  .syncbar .dot.ok{ background:#22c55e; }
-  .syncbar .dot.warn{ background:#f59e0b; }
-  .syncbar .dot.err{ background:#ef4444; }
-  .syncbar .spacer{ flex:1; }
-  .syncbar button{ padding:5px 10px; font-size:12px; }
-  .toolbar{
-    display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;
-  }
+  .topbar .dot{ width:8px; height:8px; border-radius:50%; background:#9ca3af; display:inline-block; }
+  .topbar .dot.ok{ background:#22c55e; }
+  .topbar .dot.warn{ background:#f59e0b; }
+  .topbar .dot.err{ background:#ef4444; }
+  .topbar .spacer{ flex:1; }
+  .topbar button{ padding:5px 10px; font-size:12px; }
+
+  .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
   .toolbar input[type=text], .toolbar select{
     padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card);
   }
@@ -46,13 +70,10 @@
     font-size:13px; cursor:pointer; color:var(--text);
   }
   button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
-  button.ghost{ background:transparent; }
   button:hover{ filter:brightness(0.97); }
   button:disabled{ opacity:0.5; cursor:default; }
   .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
-  .stat{
-    background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; min-width:110px;
-  }
+  .stat{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; min-width:110px; }
   .stat .n{ font-size:18px; font-weight:600; }
   .stat .l{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
   table{
@@ -62,11 +83,8 @@
   th, td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
   th{ background:#fafbfc; font-weight:600; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
   tr.overdue td{ background:var(--overdue); }
-  tr.unsynced td:first-child{ box-shadow:inset 3px 0 0 var(--accent); }
   tr:hover td{ filter:brightness(0.98); }
-  .badge{
-    display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap;
-  }
+  .badge{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
   .badge.b-pending{ background:var(--pending); color:var(--pending-text); }
   .badge.b-expected{ background:var(--expected); color:var(--expected-text); }
   .badge.b-partial{ background:var(--partial); color:var(--partial-text); }
@@ -77,14 +95,9 @@
   .row-actions button{ padding:4px 8px; font-size:12px; margin-right:4px; }
   .remark{ max-width:220px; color:var(--muted); }
   .empty{ text-align:center; color:var(--muted); padding:40px; }
-  .modal-overlay{
-    display:none; position:fixed; inset:0; background:rgba(20,22,30,0.4); align-items:center; justify-content:center; z-index:50;
-  }
+  .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(20,22,30,0.4); align-items:center; justify-content:center; z-index:50; }
   .modal-overlay.open{ display:flex; }
-  .modal{
-    background:var(--card); border-radius:12px; padding:24px; width:420px; max-width:92vw;
-    box-shadow:0 10px 40px rgba(0,0,0,0.2);
-  }
+  .modal{ background:var(--card); border-radius:12px; padding:24px; width:420px; max-width:92vw; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
   .modal h2{ margin:0 0 16px; font-size:16px; }
   .field{ margin-bottom:12px; }
   .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; font-weight:600; }
@@ -94,31 +107,51 @@
   .field textarea{ resize:vertical; min-height:60px; }
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
   .overdue-tag{ color:#b3261e; font-weight:600; font-size:11px; }
-  .unsynced-tag{ color:var(--accent); font-weight:600; font-size:10px; text-transform:uppercase; }
   code{ background:#f1f2f6; padding:1px 5px; border-radius:4px; font-size:11.5px; }
 </style>
 </head>
 <body>
 
-<h1>Customer Follow-up Tracker</h1>
-<div class="sub">Overdue payment / follow-up tracking &mdash; data lives in <code>data/entries.json</code></div>
+<!-- ================= LOGIN SCREEN (public) ================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>Customer Follow-up Tracker</h1>
+    <div class="sub">Enter your GitHub access token to view and manage data.</div>
+    <div class="login-error" id="loginError"></div>
+    <label>GitHub Personal Access Token</label>
+    <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+    <label class="remember">
+      <input type="checkbox" id="rememberMe"> Remember this token on this device
+    </label>
+    <button class="primary" id="loginBtn">Unlock Tracker</button>
+    <div class="login-hint">
+      The token is stored only in your browser (never sent anywhere except GitHub's API)
+      and is used to read/write <code>data/entries.json</code> in the private repo.
+      It needs <strong>Contents: Read and write</strong> access to this repository.
+    </div>
+  </div>
+</div>
 
-<div class="syncbar">
+<!-- ================= APP SCREEN (requires valid token) ================= -->
+<div id="appScreen">
+<div class="wrap">
+
+<h1>Customer Follow-up Tracker</h1>
+<div class="sub">Overdue payment / follow-up tracking &mdash; data stored in a private GitHub repo</div>
+
+<div class="topbar">
   <span class="dot" id="syncDot"></span>
-  <span id="syncText">Loading data/entries.json...</span>
+  <span id="syncText">Loading...</span>
   <div class="spacer"></div>
-  <span id="unsyncedCount"></span>
-  <button id="syncBtn">Sync from repo</button>
-  <button class="primary" id="downloadBtn">Download updated entries.json</button>
+  <button id="syncBtn">Refresh</button>
+  <button id="logoutBtn">Log out</button>
 </div>
 
 <div class="stats" id="stats"></div>
 
 <div class="toolbar">
   <input type="text" id="searchBox" placeholder="Search name or mobile...">
-  <select id="statusFilter">
-    <option value="">All statuses</option>
-  </select>
+  <select id="statusFilter"><option value="">All statuses</option></select>
   <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;">
     <input type="checkbox" id="overdueOnly" style="width:auto;"> Overdue only
   </label>
@@ -130,47 +163,26 @@
 <table>
   <thead>
     <tr>
-      <th>SR No</th>
-      <th>Customer Name</th>
-      <th>Mobile No</th>
-      <th>Status</th>
-      <th>Last Follow-up</th>
-      <th>Next Follow-up</th>
-      <th>Last Remark / Note</th>
-      <th>Actions</th>
+      <th>SR No</th><th>Customer Name</th><th>Mobile No</th><th>Status</th>
+      <th>Last Follow-up</th><th>Next Follow-up</th><th>Last Remark / Note</th><th>Actions</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
 </table>
 <div class="empty" id="emptyMsg" style="display:none;">No entries yet. Click "+ Add Entry" to get started.</div>
 
+</div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2 id="modalTitle">Add Entry</h2>
-    <div class="field">
-      <label>Customer Name</label>
-      <input type="text" id="f_name">
-    </div>
-    <div class="field">
-      <label>Mobile No</label>
-      <input type="text" id="f_mobile">
-    </div>
-    <div class="field">
-      <label>Status</label>
-      <select id="f_status"></select>
-    </div>
-    <div class="field">
-      <label>Last Follow-up</label>
-      <input type="date" id="f_last">
-    </div>
-    <div class="field">
-      <label>Next Follow-up</label>
-      <input type="date" id="f_next">
-    </div>
-    <div class="field">
-      <label>Last Remark / Note</label>
-      <textarea id="f_remark"></textarea>
-    </div>
+    <div class="field"><label>Customer Name</label><input type="text" id="f_name"></div>
+    <div class="field"><label>Mobile No</label><input type="text" id="f_mobile"></div>
+    <div class="field"><label>Status</label><select id="f_status"></select></div>
+    <div class="field"><label>Last Follow-up</label><input type="date" id="f_last"></div>
+    <div class="field"><label>Next Follow-up</label><input type="date" id="f_next"></div>
+    <div class="field"><label>Last Remark / Note</label><textarea id="f_remark"></textarea></div>
     <div class="modal-actions">
       <button id="cancelBtn">Cancel</button>
       <button class="primary" id="saveBtn">Save</button>
@@ -179,6 +191,18 @@
 </div>
 
 <script>
+/* ======================================================================
+   CONFIG — edit these before deploying, to match your GitHub repo.
+   The repo should be PRIVATE so entries.json is only readable with a
+   valid token. index.html itself is public (that's how free GitHub
+   Pages works) but shows nothing until a valid token unlocks the data.
+   ====================================================================== */
+const GITHUB_OWNER  = "jecrcumesh";
+const GITHUB_REPO   = "customer-followup-tracker";
+const GITHUB_BRANCH = "main";
+const DATA_PATH     = "data/entries.json";
+/* ====================================================================== */
+
 const STATUSES = [
   {key:"Pending Followup", cls:"b-pending"},
   {key:"Payment Expected", cls:"b-expected"},
@@ -188,119 +212,143 @@ const STATUSES = [
   {key:"Settled", cls:"b-settled"}
 ];
 
-const LOCAL_KEY = "followup_tracker_local_v1"; // { entries: [...], deletedIds: [...] }
-const DATA_URL = "data/entries.json";
+const TOKEN_KEY_LOCAL = "cft_gh_token";     // localStorage (persists across browser restarts)
+const TOKEN_KEY_SESSION = "cft_gh_token_s"; // sessionStorage (cleared when tab closes)
 
-let entries = [];       // merged working set (in-memory + localStorage)
-let deletedIds = [];    // ids deleted locally but possibly still in repo file
+let entries = [];
+let currentSha = null;
 let editingId = null;
-let remoteLoaded = false;
+let token = null;
 
-// ---------- persistence ----------
-function loadLocal(){
-  try{
-    const raw = localStorage.getItem(LOCAL_KEY);
-    return raw ? JSON.parse(raw) : { entries: [], deletedIds: [] };
-  }catch(e){ return { entries: [], deletedIds: [] }; }
-}
-function saveLocal(){
-  localStorage.setItem(LOCAL_KEY, JSON.stringify({ entries, deletedIds }));
+// ---------------- GitHub Contents API helpers ----------------
+function b64EncodeUnicode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64DecodeUnicode(str){ return decodeURIComponent(escape(atob(str))); }
+
+function apiUrl(){
+  return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_PATH}?ref=${encodeURIComponent(GITHUB_BRANCH)}`;
 }
 
-function nowIso(){ return new Date().toISOString(); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-
-// ---------- merge logic: never silently overwrite ----------
-// Combine remote (repo file) entries with locally-cached entries by id.
-// Newer updatedAt wins; deletions tracked locally are respected until the
-// entry disappears from the remote file (i.e. after you've committed the
-// downloaded JSON).
-function mergeRemoteIntoLocal(remoteEntries){
-  const byId = new Map();
-  remoteEntries.forEach(e => byId.set(e.id, e));
-  entries.forEach(e => {
-    const remote = byId.get(e.id);
-    if(!remote){
-      byId.set(e.id, e); // local-only (not yet committed) entry, keep it
-    } else {
-      // keep whichever was updated most recently
-      const localNewer = (e.updatedAt || "") > (remote.updatedAt || "");
-      byId.set(e.id, localNewer ? e : remote);
-    }
+async function apiGet(tok){
+  const res = await fetch(apiUrl(), {
+    headers: { Authorization: `token ${tok}`, Accept: "application/vnd.github.v3+json" },
+    cache: "no-store"
   });
-  // drop anything locally marked deleted, unless remote resurrected it with a newer timestamp
-  deletedIds = deletedIds.filter(id => {
-    const cur = byId.get(id);
-    if(!cur) return false;
-    byId.delete(id);
-    return true;
-  });
-  entries = Array.from(byId.values());
-  saveLocal();
+  if(res.status === 401) throw new Error("Invalid or expired token.");
+  if(res.status === 403) throw new Error("Token doesn't have access to this repository.");
+  if(res.status === 404) throw new Error(`Repo or ${DATA_PATH} not found. Check GITHUB_OWNER/GITHUB_REPO/DATA_PATH in index.html, and that the file exists on branch "${GITHUB_BRANCH}".`);
+  if(!res.ok) throw new Error(`GitHub API error ${res.status}`);
+  const json = await res.json();
+  const decoded = b64DecodeUnicode(json.content.replace(/\n/g, ""));
+  let arr = [];
+  try{ arr = JSON.parse(decoded || "[]"); }catch(e){ arr = []; }
+  return { entries: Array.isArray(arr) ? arr : [], sha: json.sha };
 }
 
-async function fetchRemote(){
-  const dot = document.getElementById("syncDot");
-  const text = document.getElementById("syncText");
+async function apiPut(tok, entriesArr, message){
+  const body = {
+    message: message || "Update entries.json via tracker app",
+    content: b64EncodeUnicode(JSON.stringify(entriesArr, null, 2)),
+    sha: currentSha,
+    branch: GITHUB_BRANCH
+  };
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_PATH}`, {
+    method: "PUT",
+    headers: { Authorization: `token ${tok}`, Accept: "application/vnd.github.v3+json", "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if(res.status === 409) throw { conflict: true };
+  if(!res.ok){ const t = await res.text(); throw new Error(`Save failed (${res.status}): ${t}`); }
+  const json = await res.json();
+  currentSha = json.content.sha;
+}
+
+// ---------------- login flow ----------------
+function storedToken(){
+  return sessionStorage.getItem(TOKEN_KEY_SESSION) || localStorage.getItem(TOKEN_KEY_LOCAL);
+}
+function clearStoredToken(){
+  sessionStorage.removeItem(TOKEN_KEY_SESSION);
+  localStorage.removeItem(TOKEN_KEY_LOCAL);
+}
+function showLoginError(msg){
+  const el = document.getElementById("loginError");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+function hideLoginError(){
+  document.getElementById("loginError").style.display = "none";
+}
+
+async function attemptLogin(tok, remember){
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true; btn.textContent = "Checking...";
+  hideLoginError();
   try{
-    const res = await fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" });
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
-    mergeRemoteIntoLocal(Array.isArray(data) ? data : []);
-    remoteLoaded = true;
-    dot.className = "dot ok";
-    text.textContent = "Synced with data/entries.json · " + new Date().toLocaleTimeString();
+    const data = await apiGet(tok);
+    token = tok;
+    entries = data.entries;
+    currentSha = data.sha;
+    if(remember) localStorage.setItem(TOKEN_KEY_LOCAL, tok);
+    else sessionStorage.setItem(TOKEN_KEY_SESSION, tok);
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appScreen").style.display = "block";
+    setSyncStatus("ok", "Connected · " + new Date().toLocaleTimeString());
+    render();
   }catch(err){
-    dot.className = "dot warn";
-    text.textContent = "Could not load data/entries.json (" + err.message + "). Working from local browser cache only — this is normal when opening the file directly instead of via GitHub Pages.";
+    showLoginError(err.message || "Could not verify token.");
+    clearStoredToken();
+  }finally{
+    btn.disabled = false; btn.textContent = "Unlock Tracker";
   }
-  render();
 }
 
-function nextSrNo(){
-  return entries.length ? Math.max(...entries.map(e=>e.sr)) + 1 : 1;
-}
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  const tok = document.getElementById("tokenInput").value.trim();
+  if(!tok){ showLoginError("Enter a token."); return; }
+  attemptLogin(tok, document.getElementById("rememberMe").checked);
+});
+document.getElementById("tokenInput").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") document.getElementById("loginBtn").click();
+});
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  clearStoredToken();
+  token = null;
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("tokenInput").value = "";
+});
 
+// ---------------- app logic ----------------
+function setSyncStatus(kind, text){
+  document.getElementById("syncDot").className = "dot " + kind;
+  document.getElementById("syncText").textContent = text;
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
 function isOverdue(entry){
   if(!entry.next) return false;
   if(entry.status === "Settled") return false;
   return entry.next < todayStr();
 }
-function statusClass(status){
-  const s = STATUSES.find(s=>s.key===status);
-  return s ? s.cls : "b-pending";
-}
-function fmtDate(d){
-  if(!d) return "—";
-  const [y,m,day] = d.split("-");
-  return `${day}/${m}/${y}`;
-}
-function escapeHtml(str){
-  const div = document.createElement("div");
-  div.textContent = str == null ? "" : str;
-  return div.innerHTML;
-}
+function statusClass(status){ const s = STATUSES.find(s=>s.key===status); return s ? s.cls : "b-pending"; }
+function fmtDate(d){ if(!d) return "—"; const [y,m,day] = d.split("-"); return `${day}/${m}/${y}`; }
+function escapeHtml(str){ const div = document.createElement("div"); div.textContent = str == null ? "" : str; return div.innerHTML; }
+function nextSrNo(){ return entries.length ? Math.max(...entries.map(e=>e.sr)) + 1 : 1; }
 
 function populateStatusSelects(){
   const filterSel = document.getElementById("statusFilter");
   const formSel = document.getElementById("f_status");
   STATUSES.forEach(s=>{
-    const o1 = document.createElement("option");
-    o1.value = s.key; o1.textContent = s.key;
-    filterSel.appendChild(o1);
-    const o2 = document.createElement("option");
-    o2.value = s.key; o2.textContent = s.key;
-    formSel.appendChild(o2);
+    const o1 = document.createElement("option"); o1.value = s.key; o1.textContent = s.key; filterSel.appendChild(o1);
+    const o2 = document.createElement("option"); o2.value = s.key; o2.textContent = s.key; formSel.appendChild(o2);
   });
 }
 
 function renderStats(){
-  const statsEl = document.getElementById("stats");
   const total = entries.length;
   const overdue = entries.filter(isOverdue).length;
   const settled = entries.filter(e=>e.status==="Settled").length;
   const active = total - settled;
-  statsEl.innerHTML = `
+  document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="n">${total}</div><div class="l">Total</div></div>
     <div class="stat"><div class="n" style="color:#b3261e;">${overdue}</div><div class="l">Overdue</div></div>
     <div class="stat"><div class="n">${active}</div><div class="l">Active</div></div>
@@ -312,27 +360,22 @@ function render(){
   const search = document.getElementById("searchBox").value.trim().toLowerCase();
   const statusFilter = document.getElementById("statusFilter").value;
   const overdueOnly = document.getElementById("overdueOnly").checked;
-
   let rows = [...entries].sort((a,b)=> a.sr - b.sr);
-
   rows = rows.filter(e=>{
     if(search && !(e.name.toLowerCase().includes(search) || (e.mobile||"").includes(search))) return false;
     if(statusFilter && e.status !== statusFilter) return false;
     if(overdueOnly && !isOverdue(e)) return false;
     return true;
   });
-
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
   document.getElementById("emptyMsg").style.display = rows.length ? "none" : "block";
-
   rows.forEach(e=>{
     const tr = document.createElement("tr");
     if(isOverdue(e)) tr.classList.add("overdue");
-    if(e.unsynced) tr.classList.add("unsynced");
     tr.innerHTML = `
       <td>${e.sr}</td>
-      <td>${escapeHtml(e.name)}${e.unsynced ? ' <div class="unsynced-tag">not committed</div>' : ''}</td>
+      <td>${escapeHtml(e.name)}</td>
       <td>${escapeHtml(e.mobile||"—")}</td>
       <td><span class="badge ${statusClass(e.status)}">${e.status}</span></td>
       <td>${fmtDate(e.last)}</td>
@@ -341,20 +384,51 @@ function render(){
       <td class="row-actions">
         <button data-edit="${e.id}">Edit</button>
         <button data-del="${e.id}">Delete</button>
-      </td>
-    `;
+      </td>`;
     tbody.appendChild(tr);
   });
-
-  const unsynced = entries.filter(e=>e.unsynced).length + deletedIds.length;
-  document.getElementById("unsyncedCount").textContent = unsynced
-    ? `${unsynced} change${unsynced>1?'s':''} not yet committed`
-    : "";
-
   renderStats();
 }
 
-// ---------- modal ----------
+async function persist(newEntries, message){
+  setSyncStatus("warn", "Saving...");
+  document.querySelectorAll("button").forEach(b=>b.disabled = true);
+  try{
+    await apiPut(token, newEntries, message);
+    entries = newEntries;
+    setSyncStatus("ok", "Saved · " + new Date().toLocaleTimeString());
+  }catch(err){
+    if(err && err.conflict){
+      // someone else saved in the meantime — refresh to their latest, then ask user to redo
+      const fresh = await apiGet(token);
+      entries = fresh.entries;
+      currentSha = fresh.sha;
+      setSyncStatus("err", "Data changed elsewhere — refreshed to latest. Please redo your last change.");
+      alert("The data was updated elsewhere since you loaded it. Refreshed to the latest version — please redo your last change.");
+    } else {
+      setSyncStatus("err", "Save failed: " + (err.message || err));
+      alert("Save failed: " + (err.message || err));
+    }
+  }finally{
+    document.querySelectorAll("button").forEach(b=>b.disabled = false);
+    render();
+  }
+}
+
+async function refresh(){
+  setSyncStatus("warn", "Refreshing...");
+  try{
+    const data = await apiGet(token);
+    entries = data.entries;
+    currentSha = data.sha;
+    setSyncStatus("ok", "Connected · " + new Date().toLocaleTimeString());
+  }catch(err){
+    setSyncStatus("err", "Refresh failed: " + err.message);
+  }
+  render();
+}
+
+// ---------------- modal ----------------
 function openModal(entry){
   editingId = entry ? entry.id : null;
   document.getElementById("modalTitle").textContent = entry ? "Edit Entry" : "Add Entry";
@@ -367,17 +441,13 @@ function openModal(entry){
   document.getElementById("modalOverlay").classList.add("open");
   document.getElementById("f_name").focus();
 }
-function closeModal(){
-  document.getElementById("modalOverlay").classList.remove("open");
-}
+function closeModal(){ document.getElementById("modalOverlay").classList.remove("open"); }
 
 document.getElementById("addBtn").addEventListener("click", ()=>openModal(null));
 document.getElementById("cancelBtn").addEventListener("click", closeModal);
-document.getElementById("modalOverlay").addEventListener("click", (e)=>{
-  if(e.target.id === "modalOverlay") closeModal();
-});
+document.getElementById("modalOverlay").addEventListener("click", (e)=>{ if(e.target.id === "modalOverlay") closeModal(); });
 
-document.getElementById("saveBtn").addEventListener("click", ()=>{
+document.getElementById("saveBtn").addEventListener("click", async ()=>{
   const name = document.getElementById("f_name").value.trim();
   if(!name){ alert("Customer name is required."); return; }
   const data = {
@@ -387,33 +457,27 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
     last: document.getElementById("f_last").value,
     next: document.getElementById("f_next").value,
     remark: document.getElementById("f_remark").value.trim(),
-    updatedAt: nowIso(),
-    unsynced: true
+    updatedAt: new Date().toISOString()
   };
+  let newEntries;
   if(editingId){
-    const idx = entries.findIndex(e=>e.id===editingId);
-    entries[idx] = {...entries[idx], ...data};
+    newEntries = entries.map(e => e.id === editingId ? {...e, ...data} : e);
   } else {
-    entries.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), sr: nextSrNo(), ...data });
+    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    newEntries = [...entries, { id, sr: nextSrNo(), ...data }];
   }
-  saveLocal();
   closeModal();
-  render();
+  await persist(newEntries, editingId ? `Update entry ${editingId}` : `Add entry for ${name}`);
 });
 
-document.getElementById("tbody").addEventListener("click", (e)=>{
+document.getElementById("tbody").addEventListener("click", async (e)=>{
   const editId = e.target.getAttribute("data-edit");
   const delId = e.target.getAttribute("data-del");
-  if(editId){
-    const entry = entries.find(x=>x.id===editId);
-    openModal(entry);
-  }
+  if(editId){ openModal(entries.find(x=>x.id===editId)); }
   if(delId){
-    if(confirm("Delete this entry? It will be removed here immediately; commit the downloaded JSON to remove it from the repo too.")){
-      entries = entries.filter(x=>x.id!==delId);
-      if(!deletedIds.includes(delId)) deletedIds.push(delId);
-      saveLocal();
-      render();
+    if(confirm("Delete this entry?")){
+      const newEntries = entries.filter(x=>x.id!==delId);
+      await persist(newEntries, `Delete entry ${delId}`);
     }
   }
 });
@@ -421,18 +485,7 @@ document.getElementById("tbody").addEventListener("click", (e)=>{
 document.getElementById("searchBox").addEventListener("input", render);
 document.getElementById("statusFilter").addEventListener("change", render);
 document.getElementById("overdueOnly").addEventListener("change", render);
-document.getElementById("syncBtn").addEventListener("click", fetchRemote);
-
-document.getElementById("downloadBtn").addEventListener("click", ()=>{
-  const cleaned = [...entries].sort((a,b)=>a.sr-b.sr).map(({unsynced, ...rest})=>rest);
-  const blob = new Blob([JSON.stringify(cleaned, null, 2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "entries.json";
-  a.click();
-  URL.revokeObjectURL(url);
-  alert("Downloaded entries.json.\n\nReplace data/entries.json in your GitHub repo with this file and commit/push to persist your changes.");
-});
+document.getElementById("syncBtn").addEventListener("click", refresh);
 
 document.getElementById("exportCsvBtn").addEventListener("click", ()=>{
   const header = ["SR No","Customer Name","Mobile No","Status","Last Follow-up","Next Follow-up","Last Remark/Note"];
@@ -449,14 +502,13 @@ document.getElementById("exportCsvBtn").addEventListener("click", ()=>{
   URL.revokeObjectURL(url);
 });
 
-// ---------- boot ----------
+// ---------------- boot ----------------
 populateStatusSelects();
-const cached = loadLocal();
-entries = cached.entries || [];
-deletedIds = cached.deletedIds || [];
-render();
-fetchRemote();
+const existing = storedToken();
+if(existing){
+  document.getElementById("tokenInput").value = existing;
+  attemptLogin(existing, !!localStorage.getItem(TOKEN_KEY_LOCAL));
+}
 </script>
-
 </body>
 </html>
