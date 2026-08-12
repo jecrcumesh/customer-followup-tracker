@@ -192,15 +192,18 @@
 
 <script>
 /* ======================================================================
-   CONFIG — edit these before deploying, to match your GitHub repo.
-   The repo should be PRIVATE so entries.json is only readable with a
-   valid token. index.html itself is public (that's how free GitHub
-   Pages works) but shows nothing until a valid token unlocks the data.
+   CONFIG — two repos on purpose:
+   - This file (index.html) is hosted from a PUBLIC repo via GitHub Pages
+     (free Pages requires a public repo). It's just an empty shell/login
+     screen with no real data in it.
+   - The actual data lives in a separate PRIVATE repo, reached only through
+     the authenticated GitHub API with a valid token. That's what keeps the
+     data genuinely private without needing a paid GitHub plan.
    ====================================================================== */
-const GITHUB_OWNER  = "jecrcumesh";
-const GITHUB_REPO   = "customer-followup-tracker";
-const GITHUB_BRANCH = "main";
-const DATA_PATH     = "data/entries.json";
+const GITHUB_OWNER   = "jecrcumesh";
+const GITHUB_DATA_REPO = "customer-followup-tracker-data";
+const GITHUB_BRANCH  = "main";
+const DATA_PATH      = "entries.json";
 /* ====================================================================== */
 
 const STATUSES = [
@@ -225,7 +228,7 @@ function b64EncodeUnicode(str){ return btoa(unescape(encodeURIComponent(str))); 
 function b64DecodeUnicode(str){ return decodeURIComponent(escape(atob(str))); }
 
 function apiUrl(){
-  return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_PATH}?ref=${encodeURIComponent(GITHUB_BRANCH)}`;
+  return `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_DATA_REPO}/contents/${DATA_PATH}?ref=${encodeURIComponent(GITHUB_BRANCH)}`;
 }
 
 async function apiGet(tok){
@@ -235,7 +238,7 @@ async function apiGet(tok){
   });
   if(res.status === 401) throw new Error("Invalid or expired token.");
   if(res.status === 403) throw new Error("Token doesn't have access to this repository.");
-  if(res.status === 404) throw new Error(`Repo or ${DATA_PATH} not found. Check GITHUB_OWNER/GITHUB_REPO/DATA_PATH in index.html, and that the file exists on branch "${GITHUB_BRANCH}".`);
+  if(res.status === 404) throw new Error(`Repo or ${DATA_PATH} not found. Check GITHUB_OWNER/GITHUB_DATA_REPO/DATA_PATH in index.html, and that the file exists on branch "${GITHUB_BRANCH}".`);
   if(!res.ok) throw new Error(`GitHub API error ${res.status}`);
   const json = await res.json();
   const decoded = b64DecodeUnicode(json.content.replace(/\n/g, ""));
@@ -251,7 +254,7 @@ async function apiPut(tok, entriesArr, message){
     sha: currentSha,
     branch: GITHUB_BRANCH
   };
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${DATA_PATH}`, {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_DATA_REPO}/contents/${DATA_PATH}`, {
     method: "PUT",
     headers: { Authorization: `token ${tok}`, Accept: "application/vnd.github.v3+json", "Content-Type": "application/json" },
     body: JSON.stringify(body)
