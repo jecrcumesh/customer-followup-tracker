@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Follow-up Tracker</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --border:#e2e4e9; --text:#1f2430; --muted:#6b7280;
+    --accent:#3b5bfd; --accent-light:#eef1ff;
+    --pending:#fff3cd; --pending-text:#8a6100;
+    --expected:#dbeafe; --expected-text:#1e4fa3;
+    --partial:#e0d4fb; --partial-text:#5b21b6;
+    --noresp:#fde2e1; --noresp-text:#b3261e;
+    --disputed:#ffe0cc; --disputed-text:#b3541e;
+    --settled:#d9f2e1; --settled-text:#157347;
+    --overdue:#fee2e2;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); padding:24px; max-width:1200px; margin:0 auto;
+  }
+  h1{font-size:20px; margin:0 0 4px;}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:16px;}
+  .syncbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:12.5px; color:var(--muted);
+  }
+  .syncbar .dot{ width:8px; height:8px; border-radius:50%; background:#9ca3af; display:inline-block; }
+  .syncbar .dot.ok{ background:#22c55e; }
+  .syncbar .dot.warn{ background:#f59e0b; }
+  .syncbar .dot.err{ background:#ef4444; }
+  .syncbar .spacer{ flex:1; }
+  .syncbar button{ padding:5px 10px; font-size:12px; }
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;
+  }
+  .toolbar input[type=text], .toolbar select{
+    padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card);
+  }
+  .toolbar input[type=text]{ min-width:200px; }
+  .spacer{flex:1;}
+  button{
+    padding:8px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card);
+    font-size:13px; cursor:pointer; color:var(--text);
+  }
+  button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.ghost{ background:transparent; }
+  button:hover{ filter:brightness(0.97); }
+  button:disabled{ opacity:0.5; cursor:default; }
+  .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .stat{
+    background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; min-width:110px;
+  }
+  .stat .n{ font-size:18px; font-weight:600; }
+  .stat .l{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  table{
+    width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04); font-size:13px;
+  }
+  th, td{ padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+  th{ background:#fafbfc; font-weight:600; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
+  tr.overdue td{ background:var(--overdue); }
+  tr.unsynced td:first-child{ box-shadow:inset 3px 0 0 var(--accent); }
+  tr:hover td{ filter:brightness(0.98); }
+  .badge{
+    display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap;
+  }
+  .badge.b-pending{ background:var(--pending); color:var(--pending-text); }
+  .badge.b-expected{ background:var(--expected); color:var(--expected-text); }
+  .badge.b-partial{ background:var(--partial); color:var(--partial-text); }
+  .badge.b-noresp{ background:var(--noresp); color:var(--noresp-text); }
+  .badge.b-disputed{ background:var(--disputed); color:var(--disputed-text); }
+  .badge.b-settled{ background:var(--settled); color:var(--settled-text); }
+  .row-actions{ white-space:nowrap; }
+  .row-actions button{ padding:4px 8px; font-size:12px; margin-right:4px; }
+  .remark{ max-width:220px; color:var(--muted); }
+  .empty{ text-align:center; color:var(--muted); padding:40px; }
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(20,22,30,0.4); align-items:center; justify-content:center; z-index:50;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:var(--card); border-radius:12px; padding:24px; width:420px; max-width:92vw;
+    box-shadow:0 10px 40px rgba(0,0,0,0.2);
+  }
+  .modal h2{ margin:0 0 16px; font-size:16px; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; font-weight:600; }
+  .field input, .field select, .field textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit;
+  }
+  .field textarea{ resize:vertical; min-height:60px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+  .overdue-tag{ color:#b3261e; font-weight:600; font-size:11px; }
+  .unsynced-tag{ color:var(--accent); font-weight:600; font-size:10px; text-transform:uppercase; }
+  code{ background:#f1f2f6; padding:1px 5px; border-radius:4px; font-size:11.5px; }
+</style>
+</head>
+<body>
+
+<h1>Customer Follow-up Tracker</h1>
+<div class="sub">Overdue payment / follow-up tracking &mdash; data lives in <code>data/entries.json</code></div>
+
+<div class="syncbar">
+  <span class="dot" id="syncDot"></span>
+  <span id="syncText">Loading data/entries.json...</span>
+  <div class="spacer"></div>
+  <span id="unsyncedCount"></span>
+  <button id="syncBtn">Sync from repo</button>
+  <button class="primary" id="downloadBtn">Download updated entries.json</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="toolbar">
+  <input type="text" id="searchBox" placeholder="Search name or mobile...">
+  <select id="statusFilter">
+    <option value="">All statuses</option>
+  </select>
+  <label style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;">
+    <input type="checkbox" id="overdueOnly" style="width:auto;"> Overdue only
+  </label>
+  <div class="spacer"></div>
+  <button id="exportCsvBtn">Export CSV</button>
+  <button class="primary" id="addBtn">+ Add Entry</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>SR No</th>
+      <th>Customer Name</th>
+      <th>Mobile No</th>
+      <th>Status</th>
+      <th>Last Follow-up</th>
+      <th>Next Follow-up</th>
+      <th>Last Remark / Note</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+<div class="empty" id="emptyMsg" style="display:none;">No entries yet. Click "+ Add Entry" to get started.</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add Entry</h2>
+    <div class="field">
+      <label>Customer Name</label>
+      <input type="text" id="f_name">
+    </div>
+    <div class="field">
+      <label>Mobile No</label>
+      <input type="text" id="f_mobile">
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="f_status"></select>
+    </div>
+    <div class="field">
+      <label>Last Follow-up</label>
+      <input type="date" id="f_last">
+    </div>
+    <div class="field">
+      <label>Next Follow-up</label>
+      <input type="date" id="f_next">
+    </div>
+    <div class="field">
+      <label>Last Remark / Note</label>
+      <textarea id="f_remark"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button id="cancelBtn">Cancel</button>
+      <button class="primary" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATUSES = [
+  {key:"Pending Followup", cls:"b-pending"},
+  {key:"Payment Expected", cls:"b-expected"},
+  {key:"Partial Received", cls:"b-partial"},
+  {key:"No Response", cls:"b-noresp"},
+  {key:"Disputed", cls:"b-disputed"},
+  {key:"Settled", cls:"b-settled"}
+];
+
+const LOCAL_KEY = "followup_tracker_local_v1"; // { entries: [...], deletedIds: [...] }
+const DATA_URL = "data/entries.json";
+
+let entries = [];       // merged working set (in-memory + localStorage)
+let deletedIds = [];    // ids deleted locally but possibly still in repo file
+let editingId = null;
+let remoteLoaded = false;
+
+// ---------- persistence ----------
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(LOCAL_KEY);
+    return raw ? JSON.parse(raw) : { entries: [], deletedIds: [] };
+  }catch(e){ return { entries: [], deletedIds: [] }; }
+}
+function saveLocal(){
+  localStorage.setItem(LOCAL_KEY, JSON.stringify({ entries, deletedIds }));
+}
+
+function nowIso(){ return new Date().toISOString(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+// ---------- merge logic: never silently overwrite ----------
+// Combine remote (repo file) entries with locally-cached entries by id.
+// Newer updatedAt wins; deletions tracked locally are respected until the
+// entry disappears from the remote file (i.e. after you've committed the
+// downloaded JSON).
+function mergeRemoteIntoLocal(remoteEntries){
+  const byId = new Map();
+  remoteEntries.forEach(e => byId.set(e.id, e));
+  entries.forEach(e => {
+    const remote = byId.get(e.id);
+    if(!remote){
+      byId.set(e.id, e); // local-only (not yet committed) entry, keep it
+    } else {
+      // keep whichever was updated most recently
+      const localNewer = (e.updatedAt || "") > (remote.updatedAt || "");
+      byId.set(e.id, localNewer ? e : remote);
+    }
+  });
+  // drop anything locally marked deleted, unless remote resurrected it with a newer timestamp
+  deletedIds = deletedIds.filter(id => {
+    const cur = byId.get(id);
+    if(!cur) return false;
+    byId.delete(id);
+    return true;
+  });
+  entries = Array.from(byId.values());
+  saveLocal();
+}
+
+async function fetchRemote(){
+  const dot = document.getElementById("syncDot");
+  const text = document.getElementById("syncText");
+  try{
+    const res = await fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    mergeRemoteIntoLocal(Array.isArray(data) ? data : []);
+    remoteLoaded = true;
+    dot.className = "dot ok";
+    text.textContent = "Synced with data/entries.json · " + new Date().toLocaleTimeString();
+  }catch(err){
+    dot.className = "dot warn";
+    text.textContent = "Could not load data/entries.json (" + err.message + "). Working from local browser cache only — this is normal when opening the file directly instead of via GitHub Pages.";
+  }
+  render();
+}
+
+function nextSrNo(){
+  return entries.length ? Math.max(...entries.map(e=>e.sr)) + 1 : 1;
+}
+
+function isOverdue(entry){
+  if(!entry.next) return false;
+  if(entry.status === "Settled") return false;
+  return entry.next < todayStr();
+}
+function statusClass(status){
+  const s = STATUSES.find(s=>s.key===status);
+  return s ? s.cls : "b-pending";
+}
+function fmtDate(d){
+  if(!d) return "—";
+  const [y,m,day] = d.split("-");
+  return `${day}/${m}/${y}`;
+}
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : str;
+  return div.innerHTML;
+}
+
+function populateStatusSelects(){
+  const filterSel = document.getElementById("statusFilter");
+  const formSel = document.getElementById("f_status");
+  STATUSES.forEach(s=>{
+    const o1 = document.createElement("option");
+    o1.value = s.key; o1.textContent = s.key;
+    filterSel.appendChild(o1);
+    const o2 = document.createElement("option");
+    o2.value = s.key; o2.textContent = s.key;
+    formSel.appendChild(o2);
+  });
+}
+
+function renderStats(){
+  const statsEl = document.getElementById("stats");
+  const total = entries.length;
+  const overdue = entries.filter(isOverdue).length;
+  const settled = entries.filter(e=>e.status==="Settled").length;
+  const active = total - settled;
+  statsEl.innerHTML = `
+    <div class="stat"><div class="n">${total}</div><div class="l">Total</div></div>
+    <div class="stat"><div class="n" style="color:#b3261e;">${overdue}</div><div class="l">Overdue</div></div>
+    <div class="stat"><div class="n">${active}</div><div class="l">Active</div></div>
+    <div class="stat"><div class="n" style="color:#157347;">${settled}</div><div class="l">Settled</div></div>
+  `;
+}
+
+function render(){
+  const search = document.getElementById("searchBox").value.trim().toLowerCase();
+  const statusFilter = document.getElementById("statusFilter").value;
+  const overdueOnly = document.getElementById("overdueOnly").checked;
+
+  let rows = [...entries].sort((a,b)=> a.sr - b.sr);
+
+  rows = rows.filter(e=>{
+    if(search && !(e.name.toLowerCase().includes(search) || (e.mobile||"").includes(search))) return false;
+    if(statusFilter && e.status !== statusFilter) return false;
+    if(overdueOnly && !isOverdue(e)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  document.getElementById("emptyMsg").style.display = rows.length ? "none" : "block";
+
+  rows.forEach(e=>{
+    const tr = document.createElement("tr");
+    if(isOverdue(e)) tr.classList.add("overdue");
+    if(e.unsynced) tr.classList.add("unsynced");
+    tr.innerHTML = `
+      <td>${e.sr}</td>
+      <td>${escapeHtml(e.name)}${e.unsynced ? ' <div class="unsynced-tag">not committed</div>' : ''}</td>
+      <td>${escapeHtml(e.mobile||"—")}</td>
+      <td><span class="badge ${statusClass(e.status)}">${e.status}</span></td>
+      <td>${fmtDate(e.last)}</td>
+      <td>${fmtDate(e.next)} ${isOverdue(e) ? '<div class="overdue-tag">OVERDUE</div>' : ''}</td>
+      <td class="remark">${escapeHtml(e.remark||"—")}</td>
+      <td class="row-actions">
+        <button data-edit="${e.id}">Edit</button>
+        <button data-del="${e.id}">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const unsynced = entries.filter(e=>e.unsynced).length + deletedIds.length;
+  document.getElementById("unsyncedCount").textContent = unsynced
+    ? `${unsynced} change${unsynced>1?'s':''} not yet committed`
+    : "";
+
+  renderStats();
+}
+
+// ---------- modal ----------
+function openModal(entry){
+  editingId = entry ? entry.id : null;
+  document.getElementById("modalTitle").textContent = entry ? "Edit Entry" : "Add Entry";
+  document.getElementById("f_name").value = entry ? entry.name : "";
+  document.getElementById("f_mobile").value = entry ? entry.mobile : "";
+  document.getElementById("f_status").value = entry ? entry.status : STATUSES[0].key;
+  document.getElementById("f_last").value = entry ? (entry.last||"") : todayStr();
+  document.getElementById("f_next").value = entry ? (entry.next||"") : "";
+  document.getElementById("f_remark").value = entry ? entry.remark : "";
+  document.getElementById("modalOverlay").classList.add("open");
+  document.getElementById("f_name").focus();
+}
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("open");
+}
+
+document.getElementById("addBtn").addEventListener("click", ()=>openModal(null));
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+document.getElementById("modalOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "modalOverlay") closeModal();
+});
+
+document.getElementById("saveBtn").addEventListener("click", ()=>{
+  const name = document.getElementById("f_name").value.trim();
+  if(!name){ alert("Customer name is required."); return; }
+  const data = {
+    name,
+    mobile: document.getElementById("f_mobile").value.trim(),
+    status: document.getElementById("f_status").value,
+    last: document.getElementById("f_last").value,
+    next: document.getElementById("f_next").value,
+    remark: document.getElementById("f_remark").value.trim(),
+    updatedAt: nowIso(),
+    unsynced: true
+  };
+  if(editingId){
+    const idx = entries.findIndex(e=>e.id===editingId);
+    entries[idx] = {...entries[idx], ...data};
+  } else {
+    entries.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), sr: nextSrNo(), ...data });
+  }
+  saveLocal();
+  closeModal();
+  render();
+});
+
+document.getElementById("tbody").addEventListener("click", (e)=>{
+  const editId = e.target.getAttribute("data-edit");
+  const delId = e.target.getAttribute("data-del");
+  if(editId){
+    const entry = entries.find(x=>x.id===editId);
+    openModal(entry);
+  }
+  if(delId){
+    if(confirm("Delete this entry? It will be removed here immediately; commit the downloaded JSON to remove it from the repo too.")){
+      entries = entries.filter(x=>x.id!==delId);
+      if(!deletedIds.includes(delId)) deletedIds.push(delId);
+      saveLocal();
+      render();
+    }
+  }
+});
+
+document.getElementById("searchBox").addEventListener("input", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+document.getElementById("overdueOnly").addEventListener("change", render);
+document.getElementById("syncBtn").addEventListener("click", fetchRemote);
+
+document.getElementById("downloadBtn").addEventListener("click", ()=>{
+  const cleaned = [...entries].sort((a,b)=>a.sr-b.sr).map(({unsynced, ...rest})=>rest);
+  const blob = new Blob([JSON.stringify(cleaned, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "entries.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("Downloaded entries.json.\n\nReplace data/entries.json in your GitHub repo with this file and commit/push to persist your changes.");
+});
+
+document.getElementById("exportCsvBtn").addEventListener("click", ()=>{
+  const header = ["SR No","Customer Name","Mobile No","Status","Last Follow-up","Next Follow-up","Last Remark/Note"];
+  const lines = [header.join(",")];
+  [...entries].sort((a,b)=>a.sr-b.sr).forEach(e=>{
+    const row = [e.sr, e.name, e.mobile, e.status, e.last, e.next, (e.remark||"").replace(/,/g,";").replace(/\n/g," ")];
+    lines.push(row.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(","));
+  });
+  const blob = new Blob([lines.join("\n")], {type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "customer_followup_tracker.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---------- boot ----------
+populateStatusSelects();
+const cached = loadLocal();
+entries = cached.entries || [];
+deletedIds = cached.deletedIds || [];
+render();
+fetchRemote();
+</script>
+
+</body>
+</html>
